@@ -16,3 +16,46 @@ package main
 	Both the client and the server must gracefully close all connections when a key is pressed
 	A report object must be created and pushed to DB , regardless of state
 */
+
+import (
+	"log"
+	"net"
+)
+
+var ConnMap = NewSafeMap()
+
+const (
+	subscriberAddr = "localhost:2020"
+	posterAddr     = "localhost:2021"
+)
+
+func main() {
+	subscriberListener, err := net.Listen("tcp", subscriberAddr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	posterListener, err := net.Listen("tcp", posterAddr)
+	if err != nil {
+		log.Fatal(err)
+	}
+	go func() {
+		for {
+			conn, err := subscriberListener.Accept()
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+			go handleSubscriber(conn)
+		}
+	}()
+	for {
+		conn, err := posterListener.Accept()
+		if err != nil {
+			log.Println(err)
+			continue
+		}
+		go handlePoster(conn)
+	}
+	//fmt.Scanln()
+	//TODO Close all connections
+}
