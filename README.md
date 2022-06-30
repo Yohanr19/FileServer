@@ -9,14 +9,20 @@ un cliente y un servidor, el cliente puede subscribirse para recibir archivos en
 
 # Protocolo
 - client subcribe
-{Canal}
+
+    {Canal}
 - client post
-{Canal}
-{Nombre de Archivo}
-{Data}
+
+    {Canal}
+    
+    {Nombre de Archivo}
+    
+    {Data}
 - client get
-{Nombre de Archivo}
-{Data}
+
+    {Nombre de Archivo}
+    
+    {Data}
 
 # Uso
 - Servidor
@@ -24,9 +30,13 @@ un cliente y un servidor, el cliente puede subscribirse para recibir archivos en
 - Cliente
     El cliente consta de 2 comandos, 'subscribe' y "post", estos deben ser llamados mientras el servidor está activo y se usan de la siguiente forma
     * ./client subscribe {canal} -keep
+    
     Donde el canal es un número entre 1 y 200
-    Keep es una bandera, si se utiliza, el cliente restablecerá la conexión luego de recibir un archivo, permitiéndole recibir archivos indeterminadamente, si no se utiliza, el cliente terminará luego de recibir un archivo 
+    
+    Keep es una bandera, si se utiliza, el cliente restablecerá la conexión luego de recibir un archivo, permitiéndole recibir archivos indeterminadamente,  si no se utiliza, el cliente terminará luego de recibir un archivo 
+    
     Al recibir archivos, estos serán guardados en el mismo directorio en que se encuentre el cliente
     * ./client post {Nombre de Archivo} {Canal}
-    El nombre de archivo debe ser un archivo que esté ubicado en el mismo directorio que el ejecutable
+    
+    El archivo debe estar ubicado en el mismo directorio que el ejecutable del cliente
     El canal debe ser un número entre 1 y 200
