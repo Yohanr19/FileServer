@@ -34,12 +34,12 @@ func (sm *SafeMap) Set(ch string, conns []net.Conn) {
 	defer sm.mu.Unlock()
 	sm.connMap[ch] = conns
 }
-
-//Takes a ch and removes all connections that have been closed
 func (sm *SafeMap) CloseConnections() {
 	for _, conns := range sm.connMap {
 		for _, c := range conns {
-			c.Close()
+			if c != nil {
+				c.Close()
+			}
 		}
 	}
 }

@@ -27,6 +27,8 @@ var ConnMap = NewSafeMap()
 const (
 	subscriberAddr = "localhost:2020"
 	posterAddr     = "localhost:2021"
+	CHANNEL_BYTES  = 3
+	FILENAME_BYTES = 256
 )
 
 func main() {

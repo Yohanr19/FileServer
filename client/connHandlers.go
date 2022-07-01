@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"io"
 	"net"
@@ -10,18 +9,37 @@ import (
 
 func handleSubscriber(conn net.Conn, ch string) error {
 	defer conn.Close()
-	io.WriteString(conn, ch+"\n")
-	filename := scanLine(conn)
+	var chBuf = make([]byte, CHANNEL_BYTES)
+	var filnameBuf = make([]byte, FILENAME_BYTES)
+	copy(chBuf, ch)
+	conn.Write(chBuf)
+	conn.Read(filnameBuf)
+	filename := string(trim(filnameBuf))
 	f, err := os.Create(filename)
 	if err != nil {
 		return err
 	}
 	defer f.Close()
-	n, err := io.Copy(f, conn)
+	var totalR int
+	var totalW int
+	for {
+		var buf = make([]byte, 1<<20)
+		n, err := conn.Read(buf)
+		totalR += n
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
+			return err
+		}
+		wrote, _ := f.Write(buf[:n])
+		totalW += wrote
+	}
+	/* n, err := io.Copy(f, conn)
 	if err != nil {
 		return err
-	}
-	fmt.Printf("Transfered %q with size of %d bytes \n", filename, n)
+	} */
+	fmt.Printf("Transfered %q, Read %d bytes, wrote %d bytes \n", filename, totalR, totalW)
 	return nil
 }
 func handlePoster(conn net.Conn, filename string, ch string) error {
@@ -31,8 +49,12 @@ func handlePoster(conn net.Conn, filename string, ch string) error {
 		return err
 	}
 	defer f.Close()
-	io.WriteString(conn, ch+"\n")
-	io.WriteString(conn, f.Name()+"\n")
+	var chBuf = make([]byte, CHANNEL_BYTES)
+	var filnameBuf = make([]byte, FILENAME_BYTES)
+	copy(chBuf, ch)
+	copy(filnameBuf, filename)
+	conn.Write(chBuf)
+	conn.Write(filnameBuf)
 	fmt.Println("Wrote headers")
 	n, err := io.Copy(conn, f)
 	if err != nil {
@@ -42,9 +64,14 @@ func handlePoster(conn net.Conn, filename string, ch string) error {
 	return nil
 }
 
-//scanLine takes a reader, scans the first line and returns the text of the line
-func scanLine(r io.Reader) string {
-	scanner := bufio.NewScanner(r)
-	scanner.Scan()
-	return scanner.Text()
+//takes a slyce of bytes and returns the slice with all trailing 0 elements trimed down
+func trim(a []byte) []byte {
+	for i := len(a) - 1; i >= 0; i-- {
+		if a[i] != 0 {
+			// found the first non-zero byte
+			// return the slice from start to the index of the first non-zero byte
+			return a[:i+1]
+		}
+	}
+	return []byte{}
 }

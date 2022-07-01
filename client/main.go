@@ -1,7 +1,7 @@
 package main
 
 import (
-	"flag"
+	"bufio"
 	"fmt"
 	"log"
 	"net"
@@ -12,11 +12,11 @@ import (
 const (
 	subscriberAddr = "localhost:2020"
 	posterAddr     = "localhost:2021"
+	CHANNEL_BYTES  = 3
+	FILENAME_BYTES = 256
 )
 
 func main() {
-	keep := flag.Bool("keep", false, "If used, the connection will restablish after a tranfer, allowing futher file transfers")
-	flag.Parse()
 	args := os.Args[1:]
 	err := validateArguments(args)
 	if err != nil {
@@ -26,31 +26,41 @@ func main() {
 	}
 	switch args[0] {
 	case "subscribe":
-			for {
-				conn, err := net.Dial("tcp", subscriberAddr)
-				if err != nil {
-					log.Fatal(err)
-				}
-				err = handleSubscriber(conn, args[1])
-				if err!=nil{
-					log.Fatal(err)
-				}
-				if *keep {
-					continue
-				}
+		var conn net.Conn
+		go func() {
+			input := bufio.NewScanner(os.Stdin)
+			input.Split(bufio.ScanBytes)
+			input.Scan()
+			err := conn.Close()
+			if err != nil {
+				log.Print(err)
 			}
+			fmt.Println("Connection closed successfully")
+			os.Exit(0)
+		}()
+		for {
+			var err error
+			conn, err = net.Dial("tcp", subscriberAddr)
+			if err != nil {
+				log.Fatal(err)
+			}
+			err = handleSubscriber(conn, args[1])
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
 	case "post":
 		conn, err := net.Dial("tcp", posterAddr)
 		if err != nil {
 			log.Fatal(err)
 		}
 		err = handlePoster(conn, args[1], args[2])
-		if err!=nil{
+		if err != nil {
 			log.Fatal(err)
 		}
-		
-	}
 
+	}
 }
 
 func validateArguments(arg []string) error {
@@ -67,7 +77,7 @@ func validateArguments(arg []string) error {
 		}
 		return nil
 	case "subscribe":
-		if len(arg) > 3 || len(arg) < 2{
+		if len(arg) > 3 || len(arg) < 2 {
 			return fmt.Errorf("unsupported amount of arguments")
 		}
 		if ch, err := strconv.Atoi(arg[1]); ch < 1 || ch > 200 || err != nil {
