@@ -10,30 +10,28 @@ un cliente y un servidor, el cliente puede subscribirse para recibir archivos en
 # Protocolo
 - client subcribe
 
-    {Canal}
+    {Canal} [3 bytes]
 - client post
 
-    {Canal}
+    {Canal} [3 bytes]
     
-    {Nombre de Archivo}
+    {Nombre de Archivo} [256 bytes]
     
-    {Data}
+    {Data} [* bytes]
 - client get
 
-    {Nombre de Archivo}
+    {Nombre de Archivo} [256 bytes]
     
-    {Data}
+    {Data}  [* bytes]
 
 # Uso
 - Servidor
     El servidor se inicializa corriendo el ejecutable. No son necesarios comandos o banderas adicionales. Luego de ser inicializado, presionar cualquier tecla finalizara la aplicación.
 - Cliente
     El cliente consta de 2 comandos, 'subscribe' y "post", estos deben ser llamados mientras el servidor está activo y se usan de la siguiente forma
-    * ./client subscribe {canal} -keep
+    * ./client subscribe {canal}
     
     Donde el canal es un número entre 1 y 200
-    
-    Keep es una bandera, si se utiliza, el cliente restablecerá la conexión luego de recibir un archivo, permitiéndole recibir archivos indeterminadamente,  si no se utiliza, el cliente terminará luego de recibir un archivo 
     
     Al recibir archivos, estos serán guardados en el mismo directorio en que se encuentre el cliente
     * ./client post {Nombre de Archivo} {Canal}
