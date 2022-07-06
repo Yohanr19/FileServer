@@ -20,6 +20,9 @@ package main
 import (
 	"log"
 	"net"
+	"net/http"
+
+	"github.com/yohanr19/fileserver/server/pkg/controlers"
 )
 
 var ConnMap = NewSafeMap()
@@ -27,6 +30,7 @@ var ConnMap = NewSafeMap()
 const (
 	subscriberAddr = "localhost:2020"
 	posterAddr     = "localhost:2021"
+	RESTAPIAddr    = "localhost:8000"
 	CHANNEL_BYTES  = 3
 	FILENAME_BYTES = 256
 )
@@ -40,6 +44,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	var mux = http.NewServeMux()
+	rc, _ := controlers.NewReportControler()
+	mux.HandleFunc("/api/reports", rc.GetReports)
+	go func() {
+		log.Println(http.ListenAndServe(RESTAPIAddr, mux))
+		log.Println("Offline mode activated")
+	}()
 	go func() {
 		for {
 			conn, err := subscriberListener.Accept()
