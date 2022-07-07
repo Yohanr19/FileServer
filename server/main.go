@@ -47,6 +47,7 @@ func main() {
 	var mux = http.NewServeMux()
 	rc, _ := controlers.NewReportControler()
 	mux.HandleFunc("/api/reports", rc.GetReports)
+	mux.HandleFunc("/api/status", httpHandleStatus)
 	go func() {
 		log.Println(http.ListenAndServe(RESTAPIAddr, mux))
 		log.Println("Offline mode activated")

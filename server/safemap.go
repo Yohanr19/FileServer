@@ -43,3 +43,13 @@ func (sm *SafeMap) CloseConnections() {
 		}
 	}
 }
+//Returns a copy of the current Map of connections
+func (sm *SafeMap)CopyMap()map[string][]net.Conn{
+	res := make(map[string][]net.Conn) 
+	for ch , conn := range sm.connMap {
+		sm.mu.Lock()
+		res[ch] = conn
+		sm.mu.Unlock()
+	}
+	return res
+}

@@ -25,7 +25,7 @@ type ReportData struct {
 	Filename         string `json:"filename"`
 	Status           string `json:"status"`
 	Filesize         int    `json:"filesize"`
-	Channel          string `json:"channe"`
+	Channel          string `json:"channel"`
 	SenderAdd        string `json:"sender_add"`
 	SubscriberAmount int    `json:"subscriber_amount"`
 }
