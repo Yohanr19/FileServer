@@ -31,13 +31,16 @@ type ReportData struct {
 }
 
 func (rc *ReportControler) GetReports(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+    w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
 	var responseData []ReportData
-
 	data, err := rc.store.GetAll()
 	if err != nil {
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
+	
 	for _, report := range data {
 		var rep ReportData
 		rep.ID = report.ID

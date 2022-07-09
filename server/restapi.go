@@ -12,6 +12,11 @@ type StatusResponse struct {
 }
 
 func httpHandleStatus(w http.ResponseWriter, r *http.Request){
+	
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+    w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+	
 	connData := ConnMap.CopyMap()
 	var response []StatusResponse
 	for ch , conns := range connData {
