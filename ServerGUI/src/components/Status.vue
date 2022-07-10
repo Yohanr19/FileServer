@@ -40,7 +40,11 @@ export default{
     display:flex
  }
  .item{
-    padding: 5px;
-    border: 10px;
+    padding: 1rem;
+    margin-right: 1rem;
+    border: 2px solid black;
+    box-sizing: border-box;
+    border-radius: 15px;
+   
  }
 </style>

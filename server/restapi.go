@@ -17,16 +17,22 @@ func httpHandleStatus(w http.ResponseWriter, r *http.Request){
 	w.Header().Set("Access-Control-Allow-Origin", "*")
     w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
 	
+
+	ConnMap.ClearConnections()
 	connData := ConnMap.CopyMap()
 	var response []StatusResponse
 	for ch , conns := range connData {
 		var item StatusResponse
 		item.Channel = ch
-		item.Amount = len(conns)
+		
 		for _ , conn := range conns{
+			if conn == nil{
+				continue
+			}
 			addr := conn.RemoteAddr().String()
 			item.SubscriberAddrs = append(item.SubscriberAddrs, addr)
 		}
+		item.Amount = len(item.SubscriberAddrs)
 		response = append(response, item)
 	}
 	enconder := json.NewEncoder(w)

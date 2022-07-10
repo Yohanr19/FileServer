@@ -5,7 +5,6 @@ import (
 	"io"
 	"log"
 	"net"
-	"time"
 
 	"github.com/yohanr19/fileserver/server/pkg/controlers"
 )
@@ -21,10 +20,24 @@ func handleSubscriber(conn net.Conn) {
 func handlePoster(conn net.Conn) {
 	defer conn.Close()
 
+	var report controlers.ReportData
+	report.SenderAdd = conn.RemoteAddr().String()
+	defer func ()  {
+		var rc, err = controlers.NewReportControler()
+		if err!=nil{
+			log.Printf("database error: %s",err)
+		}
+		if report.Status == "" {
+			report.Status = "Failed"
+		}
+		rc.AddReport(report)
+	}()
+
 	var chBuf = make([]byte, CHANNEL_BYTES)
 	conn.Read(chBuf)
 	ch := string(trim(chBuf))
-
+	report.Channel = ch
+	//Dump all the connections, leaving the server ready to reestablish the connections
 	defer func() {
 		for _, c := range ConnMap.Get(ch) {
 			if c != nil {
@@ -35,19 +48,7 @@ func handlePoster(conn net.Conn) {
 	}()
 	conns := ConnMap.Get(ch)
 	// Remove all connections that are closed at this time
-	for i, c := range conns {
-		var one = make([]byte, 1)
-		err := c.SetReadDeadline(time.Now().Add(time.Millisecond * 15))
-		if err != nil {
-			log.Print(err)
-		}
-		_, err = c.Read(one)
-		if err == io.EOF {
-			c.Close()
-			conns[i] = nil
-		}
-		log.Print(err)
-	}
+	clearConns(conns)
 	ws := make([]io.Writer, 0)
 	for _, c := range conns {
 		//Does not add nil connections
@@ -55,7 +56,13 @@ func handlePoster(conn net.Conn) {
 			ws = append(ws, c)
 		}
 	}
-	writers := io.MultiWriter(ws...)
+	report.SubscriberAmount = len(ws)
+	
+	if len(ws) == 0 {
+		return
+	}
+	writers := io.MultiWriter(ws...)	
+
 	var filenameBuf = make([]byte, FILENAME_BYTES)
 	conn.Read(filenameBuf)
 
@@ -64,22 +71,14 @@ func handlePoster(conn net.Conn) {
 		log.Printf("Error sending in channel %s \n", ch)
 		return
 	}
-
+	report.Filename = string(trim(filenameBuf))
 	z, err := io.Copy(writers, conn)
-	fmt.Println(z)
 	if err != nil {
 		log.Printf("Error sending in channel %s \n", ch)
 		return
 	}
-	var rc, _ = controlers.NewReportControler()
-	var report controlers.ReportData
-	report.Channel = ch
-	report.Filename = string(trim(filenameBuf))
-	report.Status = `Completed`
 	report.Filesize = int(z)
-	report.SenderAdd = conn.RemoteAddr().String()
-	report.SubscriberAmount = len(ws)
-	rc.AddReport(report)
+	report.Status = `Completed`
 }
 
 func trim(a []byte) []byte {
